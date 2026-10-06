@@ -1,13 +1,125 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dohongan-web</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Andy — Hong An Do | Where Ideas Flow</title>
+  <meta name="description" content="I’m Hong An Do (Andy), a student exploring how engineering and STEM can create practical, affordable solutions — especially for clean water in the Mekong Delta.">
+  <meta name="theme-color" content="#0A2A52">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Andy — Hong An Do">
+  <meta property="og:title" content="Andy — Hong An Do | Where Ideas Flow">
+  <meta property="og:description" content="I Question. I Build. I Experiment. A student exploring how engineering and STEM can create practical, affordable solutions.">
+  <meta property="og:image" content="https://firebasestorage.googleapis.com/v0/b/main-ada2c.firebasestorage.app/o/home-hero.png?alt=media">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://firebasestorage.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300&amp;display=swap">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/config.js" defer></script>
+  <script src="/js/main.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header" id="top" data-site-header></header>
+
+  <main id="main" tabindex="-1">
+
+    <!-- Hero -->
+    <section class="home-hero" aria-labelledby="hero-title">
+      <div class="container home-hero__grid">
+        <div class="hero-portrait reveal" data-hero-portrait>
+          <div class="hero-portrait__shape" aria-hidden="true"></div>
+          <div class="hero-portrait__img media">
+            <img data-img="home-hero" data-hero alt="Portrait of Hong An Do (Andy)" width="800" height="1000" loading="eager" fetchpriority="high" decoding="async">
+          </div>
+        </div>
+
+        <div class="home-hero__copy reveal reveal-delay-1">
+          <p class="eyebrow">WHERE IDEAS FLOW</p>
+          <h1 class="home-hero__heading" id="hero-title">I’m Hong An Do - <span class="accent">Andy</span></h1>
+          <div class="lead-border">
+            <p>I have always been curious about how things work — and how engineering can turn ideas into solutions. I enjoy exploring STEM, building things with my hands, and asking how science and technology can respond to problems beyond the classroom.</p>
+            <p>One issue that has particularly caught my attention is access to clean water in the Mekong Delta. Water is everywhere, yet clean and safe water is not always equally accessible. This has inspired me to explore how engineering and STEM can create practical, affordable solutions for communities facing water-related challenges.</p>
+            <p>For me, engineering is more than building machines. It is about following a question, testing an idea, and letting curiosity flow into something that can make a difference.</p>
+          </div>
+          <div class="btn-row">
+            <a class="btn btn--blue" href="/projects.html">Explore Projects</a>
+            <a class="btn btn--ghost" href="/about.html">About Andy</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Overlapping banner -->
+    <div class="banner-band">
+      <div class="container">
+        <div class="banner reveal">
+          <h2 class="banner__title"><span>I Question.</span> <span>I Build.</span> <span>I Experiment.</span></h2>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature blocks -->
+    <section class="features" aria-label="I Question, I Build, I Experiment">
+      <div class="container features__grid">
+
+        <article class="feature reveal">
+          <div class="blob">
+            <div class="blob__back" aria-hidden="true"></div>
+            <div class="blob__photo media">
+              <img data-img="home-question" alt="Andy exploring a question" width="600" height="600" loading="lazy" decoding="async">
+            </div>
+          </div>
+          <div>
+            <h3 class="feature__title">I Question</h3>
+            <p class="feature__text">It starts with following a question — asking how things work and how science and technology can respond to problems beyond the classroom.</p>
+            <a class="btn btn--orange" href="/about.html">About Andy</a>
+          </div>
+        </article>
+
+        <article class="feature reveal reveal-delay-1">
+          <div class="blob blob--b">
+            <div class="blob__back blob__back--orange" aria-hidden="true"></div>
+            <div class="blob__photo media">
+              <img data-img="home-build" alt="Andy building a project by hand" width="600" height="600" loading="lazy" decoding="async">
+            </div>
+          </div>
+          <div>
+            <h3 class="feature__title">I Build</h3>
+            <p class="feature__text">I enjoy building things with my hands, turning ideas into solutions through engineering.</p>
+            <a class="btn btn--orange" href="/projects.html">Explore Projects</a>
+          </div>
+        </article>
+
+        <article class="feature reveal">
+          <div class="blob blob--c">
+            <div class="blob__back" aria-hidden="true"></div>
+            <div class="blob__photo media">
+              <img data-img="home-experiment" alt="Andy testing an experiment" width="600" height="600" loading="lazy" decoding="async">
+            </div>
+          </div>
+          <div>
+            <h3 class="feature__title">I Experiment</h3>
+            <p class="feature__text">Testing an idea is how curiosity flows into something that can make a difference.</p>
+            <a class="btn btn--orange" href="/research.html">View Research</a>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- Welcome -->
+    <section class="welcome" aria-label="Welcome">
+      <div class="container">
+        <p class="welcome__title reveal">Welcome to <strong>Andy</strong>’s World!</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer" data-site-footer></footer>
+</body>
 </html>
