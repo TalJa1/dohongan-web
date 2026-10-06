@@ -17,6 +17,7 @@ projects/stemify.html
 css/style.css              All styles (colour tokens at the top)
 js/config.js               ← the file you edit: image names, hero style, research links
 js/main.js                 Header/footer, nav, mobile menu, image loader, animations
+sw.js                      Service worker: caches images so they don't reload on every page
 favicon.svg
 vercel.json                Vercel settings (clean URLs, cache headers)
 ```
@@ -73,6 +74,27 @@ Keep the trailing slash. The loader URL-encodes the full path (`images%2Fhome-he
 
 - `false` (current): the photo is shown inside a blob frame. Use this because the current `home-hero.png` has a **white** background.
 - `true`: use this only after uploading a version with a **transparent** background. The figure is then shown as a cutout standing on a blob shape.
+
+### Image caching
+
+Firebase serves every image with `Cache-Control: private, max-age=0`, which tells browsers to check again on
+every page view. To stop images (and the logo) from reloading on each navigation, the site registers a small
+service worker (`sw.js`):
+
+- An image that has loaded once is shown **instantly from the browser's cache** on every later page view.
+- In the background, the worker checks Firebase for a newer version. If you re-upload an image under the same name,
+  visitors see the new one on their next visit.
+- Images that were already seen appear without the fade-in. Only new images fade in.
+
+**Optional, recommended:** also give the files proper cache headers in the bucket. This helps browsers where service
+workers are off (for example some private windows). With the Google Cloud CLI, run once, and again after uploading new files:
+
+```bash
+gcloud storage objects update "gs://main-ada2c.firebasestorage.app/**" --cache-control="public, max-age=604800"
+```
+
+Or in the Google Cloud console: Cloud Storage → bucket `main-ada2c.firebasestorage.app` → select a file → **Edit metadata** →
+`Cache-Control` = `public, max-age=604800` (7 days).
 
 ### Optimize images (recommended)
 

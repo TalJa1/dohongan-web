@@ -131,6 +131,7 @@ main { overflow-x: clip; } /* offset blobs never cause sideways scroll */
 .media.is-loading > img { opacity: 0; }
 img[data-img]:not([src]) { visibility: hidden; } /* no alt-text flash before main.js resolves the URL */
 .media > img.is-loaded { opacity: 1; transition: opacity .5s ease; }
+.media > img.is-loaded.no-fade { transition: none; }
 .media.is-missing > img { visibility: hidden; }
 .media.is-missing::after {
   content: "Image coming soon";

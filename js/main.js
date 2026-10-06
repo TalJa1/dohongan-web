@@ -149,32 +149,59 @@
     img.removeAttribute("src");
   }
 
-  function markLoaded(img) {
+  // Images this browser has already shown once: they are served from the
+  // service-worker cache, so show them straight away with no fade-in.
+  var SEEN_KEY = "andy-seen-images";
+  var seen = {};
+  try { seen = JSON.parse(localStorage.getItem(SEEN_KEY)) || {}; } catch (e) { seen = {}; }
+  function remember(url) {
+    if (seen[url]) return;
+    seen[url] = 1;
+    try { localStorage.setItem(SEEN_KEY, JSON.stringify(seen)); } catch (e) { /* storage blocked: fine */ }
+  }
+
+  function markLoaded(img, instant) {
     var wrap = img.closest(".media");
+    if (instant) img.classList.add("no-fade");
     if (wrap) wrap.classList.remove("is-loading");
     img.classList.add("is-loaded");
   }
 
-  function loadHero(img, url) {
-    var holder = img.closest("[data-hero-portrait]");
-    if (holder) holder.classList.toggle("is-cutout", CONFIG.heroCutout === true);
-    img.addEventListener("load", function () { markLoaded(img); }, { once: true });
+  function loadImage(img, url) {
+    var known = !!seen[url];
+    var wrap = img.closest(".media");
+    img.addEventListener("load", function () { remember(url); markLoaded(img, known); }, { once: true });
     img.addEventListener("error", function () { markMissing(img); }, { once: true });
+    // Only hide-then-fade images that are new to this browser.
+    if (wrap && !known) wrap.classList.add("is-loading");
     img.src = url;
+    if (img.complete && img.naturalWidth) { remember(url); markLoaded(img, true); }
   }
 
   function loadImages() {
     var imgs = document.querySelectorAll("img[data-img]");
     Array.prototype.forEach.call(imgs, function (img) {
-      var key = img.getAttribute("data-img");
-      var url = imageUrl(key);
-      var wrap = img.closest(".media");
+      var url = imageUrl(img.getAttribute("data-img"));
       if (!url) { markMissing(img); return; }
-      if (wrap) wrap.classList.add("is-loading");
-      if (img.hasAttribute("data-hero")) { loadHero(img, url); return; }
-      img.addEventListener("load", function () { markLoaded(img); }, { once: true });
-      img.addEventListener("error", function () { markMissing(img); }, { once: true });
-      img.src = url;
+      if (img.hasAttribute("data-hero")) {
+        var holder = img.closest("[data-hero-portrait]");
+        if (holder) holder.classList.toggle("is-cutout", CONFIG.heroCutout === true);
+      }
+      loadImage(img, url);
+    });
+  }
+
+  /* ---------- Image cache (service worker) ---------- */
+  function registerServiceWorker() {
+    if (!("serviceWorker" in navigator) || !/^https?:$/.test(location.protocol)) return;
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("/sw.js").then(function () {
+        return navigator.serviceWorker.ready;
+      }).then(function (reg) {
+        // Images on the very first page loaded before the worker existed: hand them over to cache.
+        var urls = Object.keys(seen);
+        if (reg.active && urls.length) reg.active.postMessage({ type: "cache-images", urls: urls });
+      }).catch(function () { /* caching is optional */ });
     });
   }
 
@@ -260,6 +287,7 @@
 
   /* ---------- Boot ---------- */
   function init() {
+    registerServiceWorker();
     renderHeader();
     renderFooter();
     initMenu();
