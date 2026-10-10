@@ -707,6 +707,43 @@ img[data-img]:not([src]) { visibility: hidden; } /* no alt-text flash before mai
 }
 
 /* =========================================================================
+   Hover-to-expand figure (project detail + research pages). main.js counts 3-2-1 while
+   the pointer rests on the picture, then grows a fixed layer over the page,
+   so nothing in the layout moves. Leaving shrinks it back to the frame.
+   ========================================================================= */
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes count-pop {
+  0%   { opacity: 0; scale: .5; }
+  25%  { opacity: 1; scale: 1.1; }
+  40%, 100% { opacity: 1; scale: 1; }
+}
+@keyframes count-ring { from { opacity: .8; scale: 1; } to { opacity: 0; scale: 1.7; } }
+
+.is-zoomable .media { cursor: zoom-in; }
+.detail__figure.is-zooming, .research__media.is-zooming { z-index: 20; } /* lift above neighbouring cards */
+.research__media.is-zooming { position: relative; }
+.zoom-count {
+  position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; pointer-events: none;
+  background: rgba(7, 29, 58, .3); animation: fade-in .3s ease both;
+}
+.zoom-count span {
+  position: relative; display: grid; place-items: center; width: 84px; height: 84px; border-radius: 50%;
+  background: var(--orange); color: var(--navy); box-shadow: 0 10px 30px -8px rgba(7, 29, 58, .6);
+  font: 800 2.6rem/1 var(--font); animation: count-pop 1s var(--ease) both;
+}
+.zoom-count span::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%; border: 3px solid var(--orange);
+  animation: count-ring 1s ease-out both;
+}
+.zoom-layer {
+  position: fixed; z-index: 30; overflow: hidden;
+  border-radius: var(--radius-lg); background: var(--soft-2); box-shadow: var(--shadow);
+  transition: left .6s var(--ease), top .6s var(--ease), width .6s var(--ease), height .6s var(--ease), box-shadow .6s;
+}
+.zoom-layer.is-open { box-shadow: 0 40px 90px -30px rgba(7, 29, 58, .65); }
+.zoom-layer img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
+
+/* =========================================================================
    Page transitions — cross-fade between pages in browsers that support
    cross-document View Transitions; others navigate normally.
    ========================================================================= */

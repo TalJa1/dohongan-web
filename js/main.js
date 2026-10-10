@@ -306,6 +306,104 @@
     });
   }
 
+  /* ---------- Hover-to-expand figures (project detail + research pages) ---------- */
+  // Rest the mouse on the picture: it counts 3, 2, 1, then grows in a fixed
+  // layer above the page (no layout shift). Leaving shrinks it back.
+  var ZOOM_COUNT = 3, ZOOM_TICK = 1000;
+
+  function placeLayer(el, r) {
+    el.style.left = r.left + "px";
+    el.style.top = r.top + "px";
+    el.style.width = r.width + "px";
+    el.style.height = r.height + "px";
+  }
+
+  // Largest box with the picture's own proportions that fits the viewport,
+  // centred on the original frame and kept clear of the sticky header.
+  function zoomTarget(r, img) {
+    var header = document.querySelector("[data-site-header]");
+    var minTop = (header ? header.offsetHeight : 0) + 16;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var ratio = img.naturalWidth / img.naturalHeight;
+    var w = Math.min(vw - 32, 1280), h = w / ratio;
+    var maxH = vh - minTop - 16;
+    if (h > maxH) { h = maxH; w = h * ratio; }
+    if (w <= r.width) { w = r.width; h = r.height; }
+    var left = Math.max(16, Math.min(r.left + r.width / 2 - w / 2, vw - w - 16));
+    var top = Math.max(minTop, Math.min(r.top + r.height / 2 - h / 2, vh - h - 16));
+    return { left: left, top: top, width: w, height: h };
+  }
+
+  function initImageZoom() {
+    if (!window.matchMedia || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    Array.prototype.forEach.call(document.querySelectorAll(".detail__figure, .research__media"), function (fig) {
+      var media = fig.querySelector(".media");
+      var img = media && media.querySelector("img");
+      if (!img) return;
+      var timer = null, closeTimer = null, badge = null, layer = null;
+      fig.classList.add("is-zoomable");
+
+      function showCount(n) {
+        if (!badge) {
+          badge = document.createElement("div");
+          badge.className = "zoom-count";
+          badge.setAttribute("aria-hidden", "true");
+          media.appendChild(badge);
+        }
+        badge.innerHTML = "<span>" + n + "</span>"; // new node restarts the pop animation
+      }
+      function hideCount() {
+        if (badge) { badge.remove(); badge = null; }
+      }
+      function discard() {
+        clearTimeout(closeTimer);
+        if (layer) { layer.remove(); layer = null; }
+        fig.classList.remove("is-zooming");
+      }
+      function expand() {
+        var r = media.getBoundingClientRect();
+        layer = document.createElement("div");
+        layer.className = "zoom-layer";
+        layer.setAttribute("aria-hidden", "true");
+        placeLayer(layer, r);
+        var big = document.createElement("img");
+        big.src = img.currentSrc || img.src;
+        big.alt = "";
+        layer.appendChild(big);
+        fig.appendChild(layer);
+        layer.getBoundingClientRect(); // commit the start state so it animates
+        placeLayer(layer, zoomTarget(r, img));
+        layer.classList.add("is-open");
+      }
+      function begin() {
+        if (!(img.complete && img.naturalWidth) || media.classList.contains("is-missing")) return;
+        clearTimeout(timer);
+        discard(); // a layer that was still shrinking
+        fig.classList.add("is-zooming");
+        var n = ZOOM_COUNT;
+        (function tick() {
+          if (n === 0) { hideCount(); expand(); return; }
+          showCount(n--);
+          timer = setTimeout(tick, ZOOM_TICK);
+        })();
+      }
+      function collapse() {
+        clearTimeout(timer);
+        hideCount();
+        if (!layer) { fig.classList.remove("is-zooming"); return; }
+        var l = layer;
+        l.classList.remove("is-open");
+        placeLayer(l, media.getBoundingClientRect());
+        var done = function () { if (layer === l) discard(); };
+        l.addEventListener("transitionend", function (e) { if (e.propertyName === "width") done(); });
+        closeTimer = setTimeout(done, 800); // also covers reduced motion (no transition)
+      }
+
+      fig.addEventListener("pointerenter", function (e) { if (e.pointerType === "mouse") begin(); });
+      fig.addEventListener("pointerleave", function (e) { if (e.pointerType === "mouse") collapse(); });
+    });
+  }
+
   /* ---------- Boot ---------- */
   function init() {
     registerServiceWorker();
@@ -317,6 +415,7 @@
     initStagger();
     initReveal();
     initCounters();
+    initImageZoom();
   }
 
   if (document.readyState === "loading") {
