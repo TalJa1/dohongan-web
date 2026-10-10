@@ -1,6 +1,6 @@
 /* =========================================================================
    main.js — header/footer injection, active nav, mobile menu,
-   image loader (Firebase Storage), scroll reveal, stat counters.
+   image loader (Firebase Storage), scroll reveal + stagger, stat counters.
    No dependencies.
    ========================================================================= */
 (function () {
@@ -41,9 +41,9 @@
     var header = document.querySelector("[data-site-header]");
     if (!header) return;
     var active = currentKey();
-    var links = NAV.map(function (item) {
+    var links = NAV.map(function (item, i) {
       var isActive = item.key === active;
-      return '<li><a href="' + item.href + '"' +
+      return '<li style="--i:' + i + '"><a href="' + item.href + '"' +
         (isActive ? ' class="is-active" aria-current="page"' : "") +
         ">" + item.label.replace("&", "&amp;") + "</a></li>";
     }).join("");
@@ -63,7 +63,8 @@
         '<nav class="site-nav" id="site-nav" aria-label="Main">' +
           '<ul class="nav-list">' + links + "</ul>" +
         "</nav>" +
-      "</div>";
+      "</div>" +
+      '<span class="scroll-progress" aria-hidden="true"></span>';
   }
 
   /* ---------- Footer ---------- */
@@ -225,9 +226,29 @@
     });
   }
 
+  /* ---------- Staggered children ---------- */
+  // Items in these containers rise in one after another when the .reveal
+  // around them becomes visible. Outer containers come first, so a list
+  // nested inside one already staggering is left to move with its parent.
+  var STAGGER = [
+    ".page-hero .reveal:not(.page-hero__media)", ".home-hero__copy",
+    ".stats", ".tags", ".bullets", ".interests", ".mini-stats", ".chips", ".btn-row"
+  ];
+  function initStagger() {
+    STAGGER.forEach(function (sel) {
+      Array.prototype.forEach.call(document.querySelectorAll(sel), function (el) {
+        if (!el.closest(".reveal") || (el.parentElement && el.parentElement.closest(".stagger"))) return;
+        el.classList.add("stagger");
+        Array.prototype.forEach.call(el.children, function (child, i) {
+          child.style.setProperty("--i", i);
+        });
+      });
+    });
+  }
+
   /* ---------- Scroll reveal ---------- */
   function initReveal() {
-    var els = document.querySelectorAll(".reveal");
+    var els = document.querySelectorAll(".reveal, .timeline");
     if (reduceMotion || !("IntersectionObserver" in window)) {
       Array.prototype.forEach.call(els, function (el) { el.classList.add("is-visible"); });
       return;
@@ -293,6 +314,7 @@
     initMenu();
     loadImages();
     initResearchLinks();
+    initStagger();
     initReveal();
     initCounters();
   }
