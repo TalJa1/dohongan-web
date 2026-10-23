@@ -10,7 +10,7 @@
   var CONFIG = window.SITE_CONFIG || { images: {} };
   var reduceMotion = window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  // a mouse or trackpad (not touch): cursor, tilt and magnetic effects only apply here
+  // a mouse or trackpad (not touch): tilt and magnetic effects only apply here
   var finePointer = window.matchMedia &&
     window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
@@ -383,7 +383,6 @@
       box.classList.toggle("is-single", group.length < 2);
       show(Math.max(0, group.indexOf(btn)));
       box.showModal();
-      moveCursor(box); // the dialog sits in the top layer, above the page cursor
       document.body.classList.add("no-scroll");
     }
 
@@ -395,7 +394,6 @@
     box.querySelector(".lightbox__next").addEventListener("click", function () { show(index + 1); });
     box.addEventListener("close", function () {
       document.body.classList.remove("no-scroll");
-      moveCursor(document.body);
     });
     // a click on the dark backdrop (the dialog itself, not its content) closes it
     box.addEventListener("click", function (e) { if (e.target === box) box.close(); });
@@ -424,66 +422,6 @@
         hero.style.setProperty("--mx", ((e.clientX - r.left) / r.width * 100).toFixed(1) + "%");
         hero.style.setProperty("--my", ((e.clientY - r.top) / r.height * 100).toFixed(1) + "%");
       });
-    });
-  }
-
-  /* ---------- Custom cursor ---------- */
-  // An orange dot that tracks the pointer exactly, and a ring that trails it.
-  // The ring grows over links, and shows "VIEW" over pictures that open large.
-  var cursorParts = [];
-  function moveCursor(host) {
-    cursorParts.forEach(function (el) { host.appendChild(el); });
-  }
-
-  var DARK_AREAS = ".page-hero, .closing, .features, .banner, .welcome, .cta-band, .lightbox, .figure-highlight, .chip";
-
-  function initCursor() {
-    if (!finePointer) return;
-    var dot = document.createElement("div");
-    var ring = document.createElement("div");
-    dot.className = "cursor-dot is-hidden";
-    ring.className = "cursor-ring is-hidden";
-    dot.setAttribute("aria-hidden", "true");
-    ring.setAttribute("aria-hidden", "true");
-    ring.innerHTML = '<span class="cursor-ring__label">VIEW</span>';
-    cursorParts = [ring, dot];
-    moveCursor(document.body);
-    document.documentElement.classList.add("has-cursor");
-
-    var x = -100, y = -100, rx = -100, ry = -100, running = false;
-    function frame() {
-      // the ring eases towards the pointer; with reduced motion it simply follows
-      rx += (x - rx) * (reduceMotion ? 1 : 0.2);
-      ry += (y - ry) * (reduceMotion ? 1 : 0.2);
-      dot.style.transform = "translate3d(" + x + "px," + y + "px,0)";
-      ring.style.transform = "translate3d(" + rx + "px," + ry + "px,0)";
-      if (Math.abs(x - rx) > 0.1 || Math.abs(y - ry) > 0.1) requestAnimationFrame(frame);
-      else running = false;
-    }
-    function setState(target) {
-      var view = !!(target && target.closest("[data-lightbox]:not(.is-missing)"));
-      var link = !view && !!(target && target.closest("a, button, [role='button'], label, summary"));
-      var dark = !!(target && target.closest(DARK_AREAS));
-      ring.classList.toggle("is-view", view);
-      ring.classList.toggle("is-link", link);
-      dot.classList.toggle("is-view", view);
-      dot.classList.toggle("is-link", link);
-      ring.classList.toggle("on-dark", dark);
-    }
-
-    document.addEventListener("pointermove", function (e) {
-      if (e.pointerType !== "mouse") return;
-      x = e.clientX; y = e.clientY;
-      dot.classList.remove("is-hidden");
-      ring.classList.remove("is-hidden");
-      setState(e.target);
-      if (!running) { running = true; requestAnimationFrame(frame); }
-    }, { passive: true });
-    document.addEventListener("pointerdown", function () { ring.classList.add("is-down"); });
-    document.addEventListener("pointerup", function () { ring.classList.remove("is-down"); });
-    document.documentElement.addEventListener("mouseleave", function () {
-      dot.classList.add("is-hidden");
-      ring.classList.add("is-hidden");
     });
   }
 
@@ -640,7 +578,6 @@
     initToTop();
     initMagnetic();
     initTilt();
-    initCursor();
   }
 
   if (document.readyState === "loading") {

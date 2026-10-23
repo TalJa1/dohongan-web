@@ -93,7 +93,7 @@ main { overflow-x: clip; } /* offset blobs never cause sideways scroll */
   display: inline-flex; align-items: center; justify-content: center; gap: .55em;
   min-height: 48px; padding: 12px 26px;
   font: 700 .95rem/1.2 var(--font); letter-spacing: .04em; text-transform: uppercase;
-  text-decoration: none; border: 2px solid transparent; border-radius: 4px; cursor: pointer;
+  text-decoration: none; border: 2px solid transparent; border-radius: 4px; cursor: var(--cursor-link);
   transition: transform .25s var(--ease), translate .35s var(--ease), background-color .25s, color .25s, box-shadow .25s, border-color .25s;
 }
 .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
@@ -208,7 +208,7 @@ img[data-img]:not([src]) { visibility: hidden; } /* no alt-text flash before mai
 
 .nav-toggle {
   display: none; position: relative; width: 48px; height: 48px; padding: 0;
-  border: 0; border-radius: 8px; background: var(--soft); cursor: pointer;
+  border: 0; border-radius: 8px; background: var(--soft); cursor: var(--cursor-link);
 }
 .nav-toggle-bar, .nav-toggle-bar::before, .nav-toggle-bar::after {
   position: absolute; left: 13px; width: 22px; height: 2.5px; border-radius: 2px;
@@ -630,7 +630,7 @@ a:hover > .ext-icon { translate: 2px -2px; }
 .gallery--sm { --row: clamp(110px, 11vw, 150px); margin-top: 24px; }
 .gallery > li { min-width: 0; }
 .gallery__item {
-  display: block; width: 100%; height: 100%; padding: 0; border: 0; cursor: zoom-in;
+  display: block; width: 100%; height: 100%; padding: 0; border: 0; cursor: var(--cursor-zoom);
   border-radius: var(--radius); box-shadow: var(--shadow-sm);
   transition: transform .4s var(--ease), box-shadow .4s;
 }
@@ -652,7 +652,7 @@ a:hover > .ext-icon { translate: 2px -2px; }
 .gallery__item:hover::before, .gallery__item:focus-visible::before { opacity: 1; }
 .gallery__item:not(.is-missing):hover::after, .gallery__item:not(.is-missing):focus-visible::after { opacity: 1; scale: 1; }
 /* a missing file keeps the "Image coming soon" placeholder from .media.is-missing */
-.gallery__item.is-missing { cursor: default; }
+.gallery__item.is-missing { cursor: var(--cursor-arrow); }
 .gallery__item.is-missing:hover { transform: none; }
 .gallery__item.is-missing::before { display: none; }
 .gallery--sm .gallery__item.is-missing::after { font-size: .62rem; letter-spacing: .08em; }
@@ -814,7 +814,7 @@ a:hover > .ext-icon { translate: 2px -2px; }
 @keyframes lightbox-in { from { opacity: 0; scale: .94; } to { opacity: 1; scale: 1; } }
 .lightbox__btn {
   position: fixed; z-index: 1; display: grid; place-items: center; width: 52px; height: 52px; padding: 0;
-  border: 0; border-radius: 50%; cursor: pointer;
+  border: 0; border-radius: 50%; cursor: var(--cursor-link);
   background: rgba(255, 255, 255, .12); color: var(--white);
   transition: background .25s, color .25s, scale .25s var(--ease);
 }
@@ -1000,7 +1000,7 @@ a:hover > .ext-icon { translate: 2px -2px; }
    ========================================================================= */
 @keyframes fade-in { from { opacity: 0; } }
 
-.media.is-zoomable { cursor: zoom-in; }
+.media.is-zoomable { cursor: var(--cursor-zoom); }
 .media.is-zoomable::before {
   content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
   background: linear-gradient(to top, rgba(7, 29, 58, .5), transparent 55%);
@@ -1015,46 +1015,22 @@ a:hover > .ext-icon { translate: 2px -2px; }
 .media.is-zoomable:not(.is-missing):focus-visible::before { opacity: 1; }
 .media.is-zoomable:not(.is-missing):hover::after,
 .media.is-zoomable:not(.is-missing):focus-visible::after { opacity: 1; scale: 1; }
-.media.is-zoomable.is-missing { cursor: default; }
+.media.is-zoomable.is-missing { cursor: var(--cursor-arrow); }
 
 /* =========================================================================
-   Custom cursor (main.js, mouse/trackpad only): a dot on the pointer and a
-   trailing ring that grows over links and reads "VIEW" over pictures.
+   Branded cursor: plain CSS cursors (no JS), so the pointer sits exactly on
+   the mouse with no trailing. A navy arrow, an orange hand over links and an
+   orange magnifier over pictures that open large. Each falls back to the
+   matching system cursor; touch screens never show a cursor.
    ========================================================================= */
-html.has-cursor, html.has-cursor * { cursor: none !important; }
-.cursor-dot, .cursor-ring {
-  position: fixed; left: 0; top: 0; z-index: 10000; pointer-events: none;
-  border-radius: 50%; will-change: transform;
+:root {
+  --cursor-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'%3E%3Cpath d='M4 2.5V19.6l4.5-4.1 3 6.7 2.9-1.3-3-6.6h6.2z' fill='%230A2A52' stroke='%23fff' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M4 2.5V19.6l4.5-4.1 3 6.7 2.9-1.3-3-6.6h6.2z' fill='%230A2A52' stroke='%23F58220' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E") 5 3, auto;
+  --cursor-link: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'%3E%3Cpath d='M6.25 4.25a1.75 1.75 0 0 1 3.5 0v5a1.75 1.75 0 0 1 3.5 0v1a1.75 1.75 0 0 1 3.5 0v1.25a1.75 1.75 0 0 1 3.5 0V16c0 3.6-2.65 6-5.75 6h-2c-2.3 0-3.7-.8-5-2.1l-4.1-4.1a1.6 1.6 0 0 1 2.3-2.3l.55.5z' fill='%23F58220' stroke='%23fff' stroke-width='2.8' stroke-linejoin='round'/%3E%3Cpath d='M6.25 4.25a1.75 1.75 0 0 1 3.5 0v5a1.75 1.75 0 0 1 3.5 0v1a1.75 1.75 0 0 1 3.5 0v1.25a1.75 1.75 0 0 1 3.5 0V16c0 3.6-2.65 6-5.75 6h-2c-2.3 0-3.7-.8-5-2.1l-4.1-4.1a1.6 1.6 0 0 1 2.3-2.3l.55.5z' fill='%23F58220' stroke='%230A2A52' stroke-width='1.4' stroke-linejoin='round'/%3E%3Cpath d='M9.75 9.25V13M13.25 10.25V13M16.75 11.5V13' stroke='%230A2A52' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E") 11 3, pointer;
+  --cursor-zoom: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'%3E%3Cg stroke='%23fff' stroke-linecap='round'%3E%3Cpath d='M15 15l5.5 5.5' stroke-width='5'/%3E%3Ccircle cx='10' cy='10' r='7' stroke-width='3.2'/%3E%3C/g%3E%3Cpath d='M15 15l5.5 5.5' stroke='%230A2A52' stroke-width='3.2' stroke-linecap='round'/%3E%3Ccircle cx='10' cy='10' r='7' fill='%23F58220' stroke='%230A2A52' stroke-width='1.6'/%3E%3Cpath d='M10 6.8v6.4M6.8 10h6.4' stroke='%230A2A52' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") 13 13, zoom-in;
 }
-.cursor-dot {
-  width: 8px; height: 8px; margin: -4px 0 0 -4px; background: var(--orange);
-  transition: opacity .25s, scale .25s var(--ease);
-}
-.cursor-dot.is-link { scale: 1.6; }
-.cursor-dot.is-view { scale: 0; }
-.cursor-ring {
-  display: grid; place-items: center;
-  width: 38px; height: 38px; margin: -19px 0 0 -19px;
-  border: 2px solid rgba(11, 79, 143, .55);
-  transition: width .35s var(--ease), height .35s var(--ease), margin .35s var(--ease),
-    background-color .3s, border-color .3s, box-shadow .3s, opacity .3s, scale .2s var(--ease);
-}
-.cursor-ring.on-dark { border-color: rgba(255, 255, 255, .75); }
-.cursor-ring.is-link { width: 58px; height: 58px; margin: -29px 0 0 -29px; background: rgba(245, 130, 32, .14); border-color: var(--orange); }
-.cursor-ring.is-view {
-  width: 86px; height: 86px; margin: -43px 0 0 -43px;
-  background: var(--orange); border-color: var(--orange); box-shadow: 0 12px 30px -10px rgba(7, 29, 58, .55);
-}
-.cursor-ring__label {
-  font: 700 .72rem/1 var(--font); letter-spacing: .14em; color: var(--navy);
-  opacity: 0; scale: .5; transition: opacity .25s, scale .35s cubic-bezier(.34, 1.56, .64, 1);
-}
-.cursor-ring.is-view .cursor-ring__label { opacity: 1; scale: 1; }
-.cursor-ring.is-down { scale: .82; }
-.cursor-dot.is-hidden, .cursor-ring.is-hidden { opacity: 0; }
-/* the "VIEW" cursor replaces the magnifier badge on pictures */
-.has-cursor .gallery__item:not(.is-missing)::after,
-.has-cursor .media.is-zoomable:not(.is-missing)::after { display: none; }
+html { cursor: var(--cursor-arrow); }
+a[href], button, [role="button"], label, summary { cursor: var(--cursor-link); }
+[data-lightbox]:not(.is-missing) { cursor: var(--cursor-zoom); }
 
 /* =========================================================================
    Extra motion
