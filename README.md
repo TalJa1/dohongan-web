@@ -6,17 +6,17 @@ It has no framework, no build step and no dependencies. Images are served from F
 ```
 index.html                 Home
 about.html                 About
-projects.html              Projects (featured + grid)
+projects.html              Clean Water Empowerment Project (Pure Mekong story + engineering projects)
+community.html             STEM & Community (Stemify, PhysiX, AeroLeague, YES)
 research.html              Research
-community.html             STEM & Community
 achievements.html          Achievements
-projects/pure-mekong.html
+beyond-the-game.html       Beyond the Game (Run & Rise)
 projects/water-filtration.html
 projects/iot-salinity.html
-projects/stemify.html
 css/style.css              All styles (colour tokens at the top)
 js/config.js               ← the file you edit: image names, hero style, research links
-js/main.js                 Header/footer, nav, mobile menu, image loader, animations
+js/main.js                 Header/footer, nav, mobile menu, image loader, animations, gallery lightbox,
+                           custom cursor (mouse only), card tilt, parallax, back-to-top progress ring
 sw.js                      Service worker: caches images so they don't reload on every page
 favicon.svg
 vercel.json                Vercel settings (clean URLs, cache headers)
@@ -56,6 +56,9 @@ Open `js/config.js` and edit the `images` map. The **key** (left) is what the HT
 (`<img data-img="home-hero" …>`), and the **value** (right) is the exact file name in the bucket.
 
 - File names are **case-sensitive**: `community-physix.JPG` is not the same file as `community-physix.jpg`.
+- Browsers (except Safari) can't show `.HEIC` photos. Convert them to `.jpg` before uploading.
+- Small photo galleries are plain markup: `<button class="gallery__item media" data-lightbox="group"><img data-img="key" …></button>`.
+  Clicking one opens it large; arrows step through the other pictures with the same `data-lightbox` group.
 - If a key is missing or a file fails to load, the page shows a branded "Image coming soon" placeholder, never a broken image.
 
 ### Images in a folder
@@ -162,15 +165,13 @@ records Vercel shows you at your domain registrar. HTTPS is set up automatically
 ## Edit content
 
 All copy is in the HTML files. Colours and spacing are CSS variables at the top of `css/style.css`.
-To enable the research button, paste the URL into `researchLinks.wastewater` in `js/config.js`.
-The button then becomes a live link that opens in a new tab.
+The research paper buttons read their URLs from `researchLinks` in `js/config.js`; an empty value shows "Coming soon".
+The old `/projects/pure-mekong` and `/projects/stemify` URLs redirect to their sections (see `vercel.json`).
 
 ---
 
 ## Still needed
 
-- [ ] **Read Research link** for "Wastewater Treatment & Reuse". The button currently shows "Coming soon".
-      Add the URL in `js/config.js` → `researchLinks.wastewater`.
 - [ ] **Stemify photos.** The PDF says these will be added later. `home-build.jpg`, `about-engineering.jpg` and
       `community-stemify.jpg` are currently the same photo (identical file size), so replace them with distinct images when ready.
 - [ ] **Optimize the large images** listed above.

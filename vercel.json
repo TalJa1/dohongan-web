@@ -3,6 +3,10 @@
   "framework": null,
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    { "source": "/projects/pure-mekong", "destination": "/projects#pure-mekong", "permanent": true },
+    { "source": "/projects/stemify", "destination": "/community#stemify", "permanent": true }
+  ],
   "headers": [
     {
       "source": "/css/(.*)",

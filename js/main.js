@@ -1,6 +1,7 @@
 /* =========================================================================
    main.js — header/footer injection, active nav, mobile menu,
-   image loader (Firebase Storage), scroll reveal + stagger, stat counters.
+   image loader (Firebase Storage), scroll reveal + stagger, stat counters,
+   click-to-enlarge figures and galleries (lightbox).
    No dependencies.
    ========================================================================= */
 (function () {
@@ -9,17 +10,23 @@
   var CONFIG = window.SITE_CONFIG || { images: {} };
   var reduceMotion = window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // a mouse or trackpad (not touch): cursor, tilt and magnetic effects only apply here
+  var finePointer = window.matchMedia &&
+    window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
   document.documentElement.classList.add("js");
 
   var NAV = [
-    { key: "home",         label: "HOME",             href: "/index.html" },
-    { key: "about",        label: "ABOUT",            href: "/about.html" },
-    { key: "projects",     label: "PROJECTS",         href: "/projects.html" },
-    { key: "research",     label: "RESEARCH",         href: "/research.html" },
-    { key: "community",    label: "STEM & COMMUNITY", href: "/community.html" },
-    { key: "achievements", label: "ACHIEVEMENT",      href: "/achievements.html" }
+    { key: "home",            label: "HOME",                            href: "/index.html" },
+    { key: "about",           label: "ABOUT",                           href: "/about.html" },
+    { key: "projects",        label: "CLEAN WATER EMPOWERMENT PROJECT", href: "/projects.html" },
+    { key: "community",       label: "STEM & COMMUNITY",                href: "/community.html" },
+    { key: "research",        label: "RESEARCH",                        href: "/research.html" },
+    { key: "achievements",    label: "ACHIEVEMENT",                     href: "/achievements.html" },
+    { key: "beyond-the-game", label: "BEYOND THE GAME",                 href: "/beyond-the-game.html" }
   ];
+
+  var NAV_BREAKPOINT = 1180; // px; below this the menu is a drop-down (see css/style.css)
 
   /* ---------- Active page (works with and without .html) ---------- */
   function currentKey() {
@@ -122,7 +129,7 @@
       }
     });
     window.addEventListener("resize", function () {
-      if (window.innerWidth > 960 && header.classList.contains("menu-open")) setOpen(false);
+      if (window.innerWidth > NAV_BREAKPOINT && header.classList.contains("menu-open")) setOpen(false);
     });
 
     // Shadow once the page scrolls
@@ -232,7 +239,8 @@
   // nested inside one already staggering is left to move with its parent.
   var STAGGER = [
     ".page-hero .reveal:not(.page-hero__media)", ".home-hero__copy",
-    ".stats", ".tags", ".bullets", ".interests", ".mini-stats", ".chips", ".btn-row"
+    ".stats", ".tags", ".bullets", ".interests", ".mini-stats", ".chips", ".btn-row",
+    ".gallery", ".link-row"
   ];
   function initStagger() {
     STAGGER.forEach(function (sel) {
@@ -248,7 +256,7 @@
 
   /* ---------- Scroll reveal ---------- */
   function initReveal() {
-    var els = document.querySelectorAll(".reveal, .timeline");
+    var els = document.querySelectorAll(".reveal, .timeline, .story");
     if (reduceMotion || !("IntersectionObserver" in window)) {
       Array.prototype.forEach.call(els, function (el) { el.classList.add("is-visible"); });
       return;
@@ -306,101 +314,309 @@
     });
   }
 
-  /* ---------- Hover-to-expand figures (project detail + research pages) ---------- */
-  // Rest the mouse on the picture: it counts 3, 2, 1, then grows in a fixed
-  // layer above the page (no layout shift). Leaving shrinks it back.
-  var ZOOM_COUNT = 3, ZOOM_TICK = 1000;
-
-  function placeLayer(el, r) {
-    el.style.left = r.left + "px";
-    el.style.top = r.top + "px";
-    el.style.width = r.width + "px";
-    el.style.height = r.height + "px";
-  }
-
-  // Largest box with the picture's own proportions that fits the viewport,
-  // centred on the original frame and kept clear of the sticky header.
-  function zoomTarget(r, img) {
-    var header = document.querySelector("[data-site-header]");
-    var minTop = (header ? header.offsetHeight : 0) + 16;
-    var vw = window.innerWidth, vh = window.innerHeight;
-    var ratio = img.naturalWidth / img.naturalHeight;
-    var w = Math.min(vw - 32, 1280), h = w / ratio;
-    var maxH = vh - minTop - 16;
-    if (h > maxH) { h = maxH; w = h * ratio; }
-    if (w <= r.width) { w = r.width; h = r.height; }
-    var left = Math.max(16, Math.min(r.left + r.width / 2 - w / 2, vw - w - 16));
-    var top = Math.max(minTop, Math.min(r.top + r.height / 2 - h / 2, vh - h - 16));
-    return { left: left, top: top, width: w, height: h };
-  }
-
-  function initImageZoom() {
-    if (!window.matchMedia || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
-    Array.prototype.forEach.call(document.querySelectorAll(".detail__figure, .research__media"), function (fig) {
-      var media = fig.querySelector(".media");
-      var img = media && media.querySelector("img");
+  /* ---------- Click-to-enlarge figures (project + research pages) ---------- */
+  // Main pictures open in the same lightbox as the galleries. Each one is its
+  // own group unless the markup already gives it a data-lightbox name.
+  function initFigureZoom() {
+    var figs = document.querySelectorAll(".detail__figure .media, .research__media .media, .featured__figure .media");
+    Array.prototype.forEach.call(figs, function (media, i) {
+      var img = media.querySelector("img");
       if (!img) return;
-      var timer = null, closeTimer = null, badge = null, layer = null;
-      fig.classList.add("is-zoomable");
+      if (!media.hasAttribute("data-lightbox")) media.setAttribute("data-lightbox", "figure-" + i);
+      media.classList.add("is-zoomable");
+      media.setAttribute("role", "button");
+      media.setAttribute("tabindex", "0");
+      media.setAttribute("aria-label", "Enlarge image" + (img.alt ? ": " + img.alt : ""));
+      media.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); media.click(); }
+      });
+    });
+  }
 
-      function showCount(n) {
-        if (!badge) {
-          badge = document.createElement("div");
-          badge.className = "zoom-count";
-          badge.setAttribute("aria-hidden", "true");
-          media.appendChild(badge);
-        }
-        badge.innerHTML = "<span>" + n + "</span>"; // new node restarts the pop animation
-      }
-      function hideCount() {
-        if (badge) { badge.remove(); badge = null; }
-      }
-      function discard() {
-        clearTimeout(closeTimer);
-        if (layer) { layer.remove(); layer = null; }
-        fig.classList.remove("is-zooming");
-      }
-      function expand() {
-        var r = media.getBoundingClientRect();
-        layer = document.createElement("div");
-        layer.className = "zoom-layer";
-        layer.setAttribute("aria-hidden", "true");
-        placeLayer(layer, r);
-        var big = document.createElement("img");
-        big.src = img.currentSrc || img.src;
-        big.alt = "";
-        layer.appendChild(big);
-        fig.appendChild(layer);
-        layer.getBoundingClientRect(); // commit the start state so it animates
-        placeLayer(layer, zoomTarget(r, img));
-        layer.classList.add("is-open");
-      }
-      function begin() {
-        if (!(img.complete && img.naturalWidth) || media.classList.contains("is-missing")) return;
-        clearTimeout(timer);
-        discard(); // a layer that was still shrinking
-        fig.classList.add("is-zooming");
-        var n = ZOOM_COUNT;
-        (function tick() {
-          if (n === 0) { hideCount(); expand(); return; }
-          showCount(n--);
-          timer = setTimeout(tick, ZOOM_TICK);
-        })();
-      }
-      function collapse() {
-        clearTimeout(timer);
-        hideCount();
-        if (!layer) { fig.classList.remove("is-zooming"); return; }
-        var l = layer;
-        l.classList.remove("is-open");
-        placeLayer(l, media.getBoundingClientRect());
-        var done = function () { if (layer === l) discard(); };
-        l.addEventListener("transitionend", function (e) { if (e.propertyName === "width") done(); });
-        closeTimer = setTimeout(done, 800); // also covers reduced motion (no transition)
-      }
+  /* ---------- Gallery lightbox ---------- */
+  // <button data-lightbox="group"><img …></button> opens the picture large.
+  // Arrows / swipe step through the other pictures of the same group.
+  function initLightbox() {
+    var triggers = document.querySelectorAll("[data-lightbox]");
+    if (!triggers.length || typeof HTMLDialogElement !== "function") return;
 
-      fig.addEventListener("pointerenter", function (e) { if (e.pointerType === "mouse") begin(); });
-      fig.addEventListener("pointerleave", function (e) { if (e.pointerType === "mouse") collapse(); });
+    var box = document.createElement("dialog");
+    box.className = "lightbox";
+    box.setAttribute("aria-label", "Image viewer");
+    box.innerHTML =
+      '<button class="lightbox__btn lightbox__close" type="button" aria-label="Close">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>' +
+      '<button class="lightbox__btn lightbox__prev" type="button" aria-label="Previous image">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>' +
+      '<figure class="lightbox__figure"><img alt=""><figcaption></figcaption></figure>' +
+      '<button class="lightbox__btn lightbox__next" type="button" aria-label="Next image">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>' +
+      '<span class="lightbox__count" aria-live="polite"></span>';
+    document.body.appendChild(box);
+
+    var big = box.querySelector("img");
+    var caption = box.querySelector("figcaption");
+    var count = box.querySelector(".lightbox__count");
+    var group = [], index = 0;
+
+    // Lazy pictures further down may not have loaded yet; the lightbox
+    // fetches them itself, so only files that failed are left out.
+    function usable(btn) {
+      var img = btn.querySelector("img");
+      return img && img.getAttribute("src") && !btn.classList.contains("is-missing");
+    }
+    function show(i) {
+      index = (i + group.length) % group.length;
+      var img = group[index].querySelector("img");
+      big.classList.remove("is-in");
+      big.src = img.currentSrc || img.src;
+      big.alt = img.alt;
+      caption.textContent = img.alt;
+      count.textContent = group.length > 1 ? (index + 1) + " / " + group.length : "";
+      big.getBoundingClientRect(); // restart the fade for each picture
+      big.classList.add("is-in");
+    }
+    function open(btn) {
+      var name = btn.getAttribute("data-lightbox");
+      group = Array.prototype.filter.call(document.querySelectorAll('[data-lightbox="' + name + '"]'), usable);
+      if (!group.length) return;
+      box.classList.toggle("is-single", group.length < 2);
+      show(Math.max(0, group.indexOf(btn)));
+      box.showModal();
+      moveCursor(box); // the dialog sits in the top layer, above the page cursor
+      document.body.classList.add("no-scroll");
+    }
+
+    Array.prototype.forEach.call(triggers, function (btn) {
+      btn.addEventListener("click", function () { open(btn); });
+    });
+    box.querySelector(".lightbox__close").addEventListener("click", function () { box.close(); });
+    box.querySelector(".lightbox__prev").addEventListener("click", function () { show(index - 1); });
+    box.querySelector(".lightbox__next").addEventListener("click", function () { show(index + 1); });
+    box.addEventListener("close", function () {
+      document.body.classList.remove("no-scroll");
+      moveCursor(document.body);
+    });
+    // a click on the dark backdrop (the dialog itself, not its content) closes it
+    box.addEventListener("click", function (e) { if (e.target === box) box.close(); });
+    box.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowLeft") show(index - 1);
+      else if (e.key === "ArrowRight") show(index + 1);
+    });
+
+    var startX = null;
+    box.addEventListener("touchstart", function (e) { startX = e.touches[0].clientX; }, { passive: true });
+    box.addEventListener("touchend", function (e) {
+      if (startX === null) return;
+      var dx = e.changedTouches[0].clientX - startX;
+      if (Math.abs(dx) > 50) show(index + (dx < 0 ? 1 : -1));
+      startX = null;
+    });
+  }
+
+  /* ---------- Hero spotlight ---------- */
+  // A soft light follows the pointer across the dark page heroes.
+  function initSpotlight() {
+    if (reduceMotion || !finePointer) return;
+    Array.prototype.forEach.call(document.querySelectorAll(".page-hero"), function (hero) {
+      hero.addEventListener("pointermove", function (e) {
+        var r = hero.getBoundingClientRect();
+        hero.style.setProperty("--mx", ((e.clientX - r.left) / r.width * 100).toFixed(1) + "%");
+        hero.style.setProperty("--my", ((e.clientY - r.top) / r.height * 100).toFixed(1) + "%");
+      });
+    });
+  }
+
+  /* ---------- Custom cursor ---------- */
+  // An orange dot that tracks the pointer exactly, and a ring that trails it.
+  // The ring grows over links, and shows "VIEW" over pictures that open large.
+  var cursorParts = [];
+  function moveCursor(host) {
+    cursorParts.forEach(function (el) { host.appendChild(el); });
+  }
+
+  var DARK_AREAS = ".page-hero, .closing, .features, .banner, .welcome, .cta-band, .lightbox, .figure-highlight, .chip";
+
+  function initCursor() {
+    if (!finePointer) return;
+    var dot = document.createElement("div");
+    var ring = document.createElement("div");
+    dot.className = "cursor-dot is-hidden";
+    ring.className = "cursor-ring is-hidden";
+    dot.setAttribute("aria-hidden", "true");
+    ring.setAttribute("aria-hidden", "true");
+    ring.innerHTML = '<span class="cursor-ring__label">VIEW</span>';
+    cursorParts = [ring, dot];
+    moveCursor(document.body);
+    document.documentElement.classList.add("has-cursor");
+
+    var x = -100, y = -100, rx = -100, ry = -100, running = false;
+    function frame() {
+      // the ring eases towards the pointer; with reduced motion it simply follows
+      rx += (x - rx) * (reduceMotion ? 1 : 0.2);
+      ry += (y - ry) * (reduceMotion ? 1 : 0.2);
+      dot.style.transform = "translate3d(" + x + "px," + y + "px,0)";
+      ring.style.transform = "translate3d(" + rx + "px," + ry + "px,0)";
+      if (Math.abs(x - rx) > 0.1 || Math.abs(y - ry) > 0.1) requestAnimationFrame(frame);
+      else running = false;
+    }
+    function setState(target) {
+      var view = !!(target && target.closest("[data-lightbox]:not(.is-missing)"));
+      var link = !view && !!(target && target.closest("a, button, [role='button'], label, summary"));
+      var dark = !!(target && target.closest(DARK_AREAS));
+      ring.classList.toggle("is-view", view);
+      ring.classList.toggle("is-link", link);
+      dot.classList.toggle("is-view", view);
+      dot.classList.toggle("is-link", link);
+      ring.classList.toggle("on-dark", dark);
+    }
+
+    document.addEventListener("pointermove", function (e) {
+      if (e.pointerType !== "mouse") return;
+      x = e.clientX; y = e.clientY;
+      dot.classList.remove("is-hidden");
+      ring.classList.remove("is-hidden");
+      setState(e.target);
+      if (!running) { running = true; requestAnimationFrame(frame); }
+    }, { passive: true });
+    document.addEventListener("pointerdown", function () { ring.classList.add("is-down"); });
+    document.addEventListener("pointerup", function () { ring.classList.remove("is-down"); });
+    document.documentElement.addEventListener("mouseleave", function () {
+      dot.classList.add("is-hidden");
+      ring.classList.add("is-hidden");
+    });
+  }
+
+  /* ---------- Magnetic buttons ---------- */
+  // Buttons lean a little towards the pointer while it is over them.
+  function initMagnetic() {
+    if (reduceMotion || !finePointer) return;
+    Array.prototype.forEach.call(document.querySelectorAll(".btn:not(.is-disabled), .back-to-top, .to-top"), function (el) {
+      el.addEventListener("pointermove", function (e) {
+        var r = el.getBoundingClientRect();
+        var dx = (e.clientX - r.left - r.width / 2) / r.width;
+        var dy = (e.clientY - r.top - r.height / 2) / r.height;
+        el.style.translate = (dx * 10).toFixed(1) + "px " + (dy * 8).toFixed(1) + "px";
+      });
+      el.addEventListener("pointerleave", function () { el.style.translate = ""; });
+    });
+  }
+
+  /* ---------- Card tilt ---------- */
+  // Cards turn slightly in 3D towards the pointer, with a soft highlight.
+  var TILT = ".project-card, .drive-card, .impact-card, .milestone__card, .stat, .interest";
+  function initTilt() {
+    if (reduceMotion || !finePointer) return;
+    Array.prototype.forEach.call(document.querySelectorAll(TILT), function (card) {
+      card.classList.add("tilt");
+      card.addEventListener("pointermove", function (e) {
+        var r = card.getBoundingClientRect();
+        var px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+        // rotate around the axis perpendicular to the pointer's offset from the centre
+        card.style.rotate = (0.5 - py).toFixed(3) + " " + (px - 0.5).toFixed(3) + " 0 " +
+          (Math.hypot(px - 0.5, py - 0.5) * 9).toFixed(2) + "deg";
+        card.style.setProperty("--gx", (px * 100).toFixed(1) + "%");
+        card.style.setProperty("--gy", (py * 100).toFixed(1) + "%");
+      });
+      card.addEventListener("pointerleave", function () { card.style.rotate = ""; });
+    });
+  }
+
+  /* ---------- Word-by-word headings ---------- */
+  // Page titles are split into words that slide up out of a mask in turn.
+  function splitWords(el) {
+    var n = 0;
+    (function walk(node) {
+      Array.prototype.slice.call(node.childNodes).forEach(function (child) {
+        if (child.nodeType === 1) { walk(child); return; }
+        if (child.nodeType !== 3 || !child.nodeValue.trim()) return;
+        var frag = document.createDocumentFragment();
+        child.nodeValue.split(/(\s+)/).forEach(function (part) {
+          if (!part) return;
+          if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(part)); return; }
+          var word = document.createElement("span");
+          word.className = "word";
+          word.innerHTML = '<span class="word__in" style="--w:' + (n++) + '"></span>';
+          word.firstChild.textContent = part;
+          frag.appendChild(word);
+        });
+        node.replaceChild(frag, child);
+      });
+    })(el);
+  }
+  function initSplitHeadings() {
+    if (reduceMotion) return;
+    Array.prototype.forEach.call(document.querySelectorAll(".page-hero__title, .home-hero__heading, .closing__title"), splitWords);
+  }
+
+  /* ---------- Parallax ---------- */
+  // Decorative shapes in dark bands drift at a different speed while scrolling.
+  function initParallax() {
+    if (reduceMotion) return;
+    var bands = document.querySelectorAll(".page-hero, .closing, .welcome, .home-hero");
+    if (!bands.length) return;
+    var ticking = false;
+    function update() {
+      ticking = false;
+      var vh = window.innerHeight;
+      Array.prototype.forEach.call(bands, function (band) {
+        var r = band.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > vh) return;
+        band.style.setProperty("--py", ((r.top + r.height / 2 - vh / 2) * -0.12).toFixed(1));
+      });
+    }
+    window.addEventListener("scroll", function () {
+      if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    }, { passive: true });
+    update();
+  }
+
+  /* ---------- Rising bubbles ---------- */
+  // A few soft bubbles float up through the dark page heroes ("where ideas flow").
+  function initBubbles() {
+    if (reduceMotion) return;
+    Array.prototype.forEach.call(document.querySelectorAll(".page-hero, .closing"), function (band) {
+      var wrap = document.createElement("span");
+      wrap.className = "bubbles";
+      wrap.setAttribute("aria-hidden", "true");
+      var html = "";
+      for (var i = 0; i < 12; i++) {
+        html += '<i style="--x:' + (4 + Math.random() * 92).toFixed(1) + "%;--s:" + (6 + Math.random() * 18).toFixed(0) +
+          "px;--d:" + (9 + Math.random() * 10).toFixed(1) + "s;--t:-" + (Math.random() * 18).toFixed(1) + 's"></i>';
+      }
+      wrap.innerHTML = html;
+      band.insertBefore(wrap, band.firstChild);
+    });
+  }
+
+  /* ---------- Back-to-top button with reading progress ---------- */
+  function initToTop() {
+    var btn = document.createElement("a");
+    btn.className = "to-top";
+    btn.href = "#top";
+    btn.setAttribute("aria-label", "Back to top");
+    btn.innerHTML =
+      '<svg class="to-top__ring" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21"/><circle class="to-top__bar" cx="24" cy="24" r="21"/></svg>' +
+      '<svg class="to-top__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+    document.body.appendChild(btn);
+    var bar = btn.querySelector(".to-top__bar");
+    var length = 2 * Math.PI * 21;
+    bar.style.strokeDasharray = length;
+    var ticking = false;
+    function update() {
+      ticking = false;
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var p = max > 0 ? Math.min(1, window.scrollY / max) : 0;
+      bar.style.strokeDashoffset = (length * (1 - p)).toFixed(1);
+      btn.classList.toggle("is-shown", window.scrollY > 500);
+    }
+    window.addEventListener("scroll", function () {
+      if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    }, { passive: true });
+    update();
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
     });
   }
 
@@ -412,10 +628,19 @@
     initMenu();
     loadImages();
     initResearchLinks();
+    initSplitHeadings();
     initStagger();
     initReveal();
     initCounters();
-    initImageZoom();
+    initFigureZoom();
+    initLightbox();
+    initSpotlight();
+    initBubbles();
+    initParallax();
+    initToTop();
+    initMagnetic();
+    initTilt();
+    initCursor();
   }
 
   if (document.readyState === "loading") {
