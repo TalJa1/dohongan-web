@@ -42,6 +42,13 @@ window.SITE_CONFIG = {
     "research-robot": "research-robot-2.png",
     "research-robot-arm": "research-wastewater.jpg",   // this file shows the robotic arm
     "research-robot-control": "research-robot.jpg",
+    "ww-influent": "waste_water_2.png",
+    "ww-design": "waste_water_3.png",
+    "ww-cost-1": "waste_water_4.png",
+    "ww-cost-2": "waste_water_5.png",
+    "ww-lcc": "waste_water_6.png",
+    "ww-sensitivity-1": "waste_water_8.png",
+    "ww-sensitivity": "waste_water_7.png",
 
     /* STEM & Community */
     "community-physix": "community-physix.JPG",

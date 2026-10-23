@@ -733,6 +733,24 @@ a:hover > .ext-icon { translate: 2px -2px; }
 .research__media .media--doc { aspect-ratio: var(--ratio, 4 / 5); }
 .research__aside .gallery { margin-top: 16px; }
 
+/* data tables from a paper: white cards, each table kept at its own shape */
+.research__tables { grid-column: 1 / -1; }
+.research__tables-title { font-size: clamp(1.2rem, 2vw, 1.5rem); color: var(--navy); margin-bottom: 18px; }
+.table-figs {
+  list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(16px, 2.4vw, 28px); align-items: start;
+}
+.table-figs__stack { display: grid; gap: clamp(16px, 2.4vw, 28px); }
+.table-fig {
+  display: grid; gap: 10px; margin: 0; padding: clamp(14px, 2vw, 20px);
+  border-radius: var(--radius); background: var(--white); box-shadow: var(--shadow-sm);
+}
+.table-fig figcaption { font-size: .88rem; font-weight: 700; color: var(--blue); }
+.table-fig .gallery__item { height: auto; aspect-ratio: var(--ratio); background: var(--white); box-shadow: none; border-radius: 8px; }
+.table-fig .gallery__item > img { object-fit: contain; }
+.table-fig .gallery__item:hover > img { transform: none; } /* zooming would crop the table edges */
+@media (max-width: 720px) { .table-figs { grid-template-columns: 1fr; } }
+
 /* =========================================================================
    STEM & COMMUNITY additions
    ========================================================================= */
