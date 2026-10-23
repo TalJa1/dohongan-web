@@ -69,7 +69,11 @@ window.SITE_CONFIG = {
 
     /* Beyond the Game */
     "run-hero": "run-hero.jpg",
-    "run-1": "run-1.JPG"
+    "run-1": "run-1.JPG",
+    "run-2": "run-2.jpg",   // converted from run-2.HEIC (browsers cannot show HEIC)
+    "run-3": "run-3.JPG",
+    "run-4": "run-4.jpg",
+    "run-5": "run-5.JPG"
   },
 
   /* Home hero portrait style:
