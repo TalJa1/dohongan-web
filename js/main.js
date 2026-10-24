@@ -141,6 +141,7 @@
   /* ---------- Image loader ---------- */
   function imageUrl(key) {
     var file = CONFIG.images && CONFIG.images[key];
+    if (file && file.charAt(0) === "/") return file;   // local file served by this site
     if (!file || !CONFIG.bucket) return null;
     var objectPath = (CONFIG.basePath || "") + file;
     return "https://firebasestorage.googleapis.com/v0/b/" + CONFIG.bucket +

@@ -22,7 +22,7 @@ window.SITE_CONFIG = {
     "home-experiment": "home-experiment.jpeg",
     "about-main": "about-main.jpg",
     "about-curiosity": "about-curiosity.jpg",
-    "about-engineering": "about-engineering.jpg",
+    "about-engineering": "/images/about-engineering.jpg",   // local file (a leading "/" skips Firebase)
     "about-impact": "about-impact.jpg",
 
     /* Clean Water Empowerment Project (Pure Mekong) */
